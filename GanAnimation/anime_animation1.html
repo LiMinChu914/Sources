@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style type="text/css">
+html {
+                margin: 0;
+                padding: 0;
+            }
+            body{
+                background: #191919;
+                display: flex;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                position: relative;
+                flex-direction: row;
+                padding: 0;
+                margin: 0;
+            }
+            #mycanvas_gen {
+                width: 60vw;
+                height: 60vw;
+                border: 10px solid;
+                border: 0.3vw solid rgb(0, 0, 151);
+                margin: auto;
+                border-radius: 0.5vw;
+            }
+            .container {
+                width: 35vw;
+                height: 35vw;
+                display: flex;
+                flex-direction: column;
+                position: relative;
+                margin: auto;
+            }
+            #mycanvas_loss {
+                width: 35vw;
+                height: 17.5vw;
+                border: 10px solid;
+                border: 0.3vw solid rgb(0, 0, 151);
+                margin: auto;
+                border-radius: 0.5vw;
+            }
+            #play {
+                width: 80%;
+                height: 20%;
+                margin: auto;
+                color:rgb(0, 132, 184);
+                font-size: 4vw;
+                border: 0.3vw solid rgb(0, 0, 151);
+                background: transparent;
+                transition-duration: 0.3s;
+                border-radius: 0.5vw;
+            }
+
+            #play:hover {
+                color:rgb(0, 183, 255);
+                border: 0.3vw solid rgb(0, 183, 255);
+                box-shadow: 0px 0px 20px 0px rgb(0, 183, 255);
+            }
+
+            #play:focus {
+                outline: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="mycanvas_gen"></canvas>
+        <div class="container">
+            <canvas id="mycanvas_loss"></canvas>
+            <button id="play" onclick="plot_two_animation(20, 200)">Play</button>
+        </div>
+
+        <script type="text/javascript">
+            function loadImage(len, path, fuck) {
+                let sources = []; 
+                for (let i = 0; i < len; i++) {
+                    let img = new Image();
+                    img.src = path + `${i}` + fuck + '.jpg';
+                    sources.push(img);
+                }
+                return sources;
+            }
+            var plot_gen = {
+                canvas: "mycanvas_gen",
+                width: 544,
+                height: 544,
+                sources: loadImage(190, "assets/DCGAN_10_Output/", ''),
+                draw: {
+                    sx: 97,
+                    sy: 86,
+                    swidth: 720,
+                    sheight: 720,
+                    dx: 0,
+                    dy: 0,
+                    dwidth: 720,
+                    dheight: 720
+                }
+            };
+            
+            var plot_loss = {
+                canvas: "mycanvas_loss",
+                width: 650,
+                height: 325,
+                sources: loadImage(19, "assets/DCGAN_10_Output/statistics", "0"),
+                draw: {
+                    sx: 40,
+                    sy: 22,
+                    swidth: 720,
+                    sheight: 720,
+                    dx: 0,
+                    dy: 0,
+                    dwidth: 720,
+                    dheight: 720
+                }
+            };
+            function init(obj) {
+                let canvas = document.getElementById(obj.canvas);
+                let ctx = canvas.getContext("2d");
+                ctx.fillStyle = '#191919';
+                ctx.rect(0, 0, obj.width, obj.height);
+                ctx.fill();
+            }
+
+            init(plot_gen);
+            init(plot_loss);
+
+            
+            function plot_two_animation(delay1, delay2){
+                plot(plot_gen)(delay1);
+                plot(plot_loss)(delay2);
+            }
+
+            function plot(plot_attribute){
+                var canvas = document.getElementById(plot_attribute.canvas);
+                canvas.width = plot_attribute.width;
+                canvas.height = plot_attribute.height;
+                var ctx = canvas.getContext("2d");
+                function drawImg(index) {
+                    // white: 97, 86
+                    ctx.drawImage(
+                        plot_attribute.sources[index],
+                        plot_attribute.draw.sx,
+                        plot_attribute.draw.sy,
+                        plot_attribute.draw.swidth,
+                        plot_attribute.draw.sheight,
+                        plot_attribute.draw.dx,
+                        plot_attribute.draw.dy,
+                        plot_attribute.draw.dwidth,
+                        plot_attribute.draw.dheight
+                    );
+                }
+                var timerID = null;
+                function animation(delay) {
+                    //console.log(sources);
+                    if (timerID) {
+                        clearInterval(timerID);
+                        timerID = null;
+                    }
+                    let index = 0;
+                    let length = plot_attribute.sources.length;
+                    timerID = setInterval(() => {
+                        drawImg(index++);
+                        if (index >= length) {
+                            clearInterval(timerID);
+                            timerID = null;
+                        }
+                    }, delay);
+                }
+                return animation;
+            }        
+        </script>
+    </body>
+</html>
