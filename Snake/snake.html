@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #canvas {
+            width: 75vh;
+            height: 75vh;
+            margin: auto;
+            border: 2px solid rgb(138, 0, 0);
+        }
+    </style>
+
+</head>
+
+<body>
+    <canvas id='canvas' width='800px' height='800px'></canvas>
+    <script>
+
+        class Snake {
+            constructor(RowSize, ColSize, x = 0, y = 0) {
+                this.direction = [[0,-1], [0,1], [1,0], [-1,0]];
+
+                this.head = {
+                    x: x,
+                    y: y,
+                    direction: this.direction[1],
+                    length: 1
+                }
+                this.RowSize = RowSize;
+                this.ColSize = ColSize;
+
+                this.bait = [Math.floor(RowSize/2), Math.floor(ColSize/2)];
+                this.move_table = Array(ColSize).fill().map((value, index) => Array(RowSize).fill(0));
+                this.forbid_direction = [this.head.direction[0] * -1, this.head.direction[1] * -1];
+            }
+            
+            get_random_number = (start, end)=>{
+                return Math.floor(Math.random() * (end-start)) + start;
+            }
+
+            default_move = ()=>{
+                this.forbid_direction = [this.head.direction[0] * -1, this.head.direction[1] * -1];
+                this.head.x += this.head.direction[0];
+                this.head.y += this.head.direction[1];
+
+                if(this.head.x >= this.RowSize || this.head.x < 0 || 
+                   this.head.y >= this.ColSize || this.head.y < 0 ||
+                   this.move_table[this.head.y][this.head.x])
+                {
+                    this.reset_game();
+                    return;
+                }
+
+                this.move_table[this.head.y][this.head.x] = this.head.length + 1;
+
+                let is_eat = (this.head.x == this.bait[0]) && (this.head.y == this.bait[1]);
+                if(is_eat){
+                    while(true){
+                        let dir = [this.get_random_number(0, this.RowSize), this.get_random_number(0, this.ColSize)];
+                        if(!this.move_table[dir[1]][dir[0]]){
+                            this.bait = dir;
+                            break;
+                        }
+                    }
+                    this.head.length += 1;
+                    this.head.x += this.head.direction[0];
+                    this.head.y += this.head.direction[1];
+                    this.move_table[this.head.y][this.head.x] = this.head.length + 1;
+                }
+
+                this.update_game();
+            }
+
+            control_move = (direction)=>{              
+                if(!((this.direction[direction][0] == this.forbid_direction[0]) && (this.direction[direction][1] == this.forbid_direction[1])))
+                    this.head.direction = this.direction[direction];
+            }
+
+            update_game = ()=>{
+                for(let i = 0; i < this.ColSize; i++){
+                    for(let j = 0; j < this.RowSize; j++){
+                        if (this.move_table[i][j]){
+                            this.move_table[i][j] -= 1;
+                        }
+                    }
+                }
+            }
+
+            reset_game = ()=>{
+                this.head = {
+                    x: 0,
+                    y: 0,
+                    direction: this.direction[1],
+                    length: 1
+                }
+                this.bait = [Math.floor(this.RowSize/2), Math.floor(this.ColSize/2)];
+                for(let i = 0; i < this.ColSize; i++){
+                    for(let j = 0; j < this.RowSize; j++){
+                        this.move_table[i][j] = 0;
+                    }
+                }
+            }
+        }
+
+        //((void (*)(int, int))0x0000abcd)(10, 20);
+
+        class Screen {
+            constructor(id, width, height, block_width, block_height, initial_color) {
+                this.canvas = document.getElementById("canvas");
+                this.ctx = canvas.getContext("2d");
+
+                this.canvas.width = width;
+                this.canvas.height = height;
+                this.block_width = block_width;
+                this.block_height = block_height;
+                this.initial_color = initial_color;
+
+                this.screen_RowSize = Math.floor(width / block_width);
+                this.screen_ColSize = Math.floor(height / block_height);
+                this.color_table = Array(this.screen_ColSize).fill().map((value, index) => Array(this.screen_RowSize));
+                for(let i = 0; i < this.screen_ColSize; i++){
+                    for(let j = 0; j < this.screen_RowSize; j++){
+                        this.color_table[i][j] = '#FFFFFF';
+                    }
+                }
+
+                this.color_table_buffer = Array(this.screen_ColSize).fill().map((value, index) => Array(this.screen_RowSize));
+                for(let i = 0; i < this.screen_ColSize; i++){
+                    for(let j = 0; j < this.screen_RowSize; j++){
+                        this.color_table_buffer[i][j] = initial_color;
+                    }
+                }
+            }
+            
+            set_colors = (colors)=>{
+                for (let i = 0; i < this.screen_ColSize; i++) {
+                    for (let j = 0; j < this.screen_RowSize; j++) {
+                        this.color_table_buffer[i][j] = colors[i][j];
+                    }
+                }
+            }
+
+            update = () => {
+                for (let i = 0; i < this.screen_ColSize; i++) {
+                    for (let j = 0; j < this.screen_RowSize; j++) {
+                        if(this.color_table_buffer[i][j] == this.color_table[i][j])
+                            continue;
+                        this.color_table[i][j] = this.color_table_buffer[i][j];
+                        this.ctx.fillStyle = this.color_table[i][j];
+                        this.ctx.fillRect(
+                            this.block_width * j, this.block_height * i,
+                            this.block_width, this.block_height);
+                    }
+                }
+            }
+
+        }
+
+        class Controller{
+            constructor(snake, screen, snake_color, snake_background_color){
+                this.snake = snake;
+                this.screen = screen;
+                
+                //initialize snake colors
+                this.snake_color = snake_color;
+                this.snake_background_color = snake_background_color;
+                this.snake_colors = Array(this.snake.ColSize).fill().map((value, index) => Array(this.snake.RowSize));
+                for(let i = 0; i < this.snake.ColSize; i++){
+                    for(let j = 0; j < this.snake.RowSize; j++){
+                        this.snake_colors[i][j] = this.background_color;
+                    }
+                }
+            }
+
+            get_snake_move_and_set_colors = ()=>{
+                for(let i = 0; i < this.snake.ColSize; i++){
+                    for(let j = 0; j < this.snake.RowSize; j++){
+                        if((j == this.snake.bait[0]) && (i == this.snake.bait[1])){
+                            this.snake_colors[i][j] = '#FFFFFF';
+                            continue;
+                        }
+                        if(this.snake.move_table[i][j]){
+                            this.snake_colors[i][j] = this.snake_color;
+                        }
+                        else{
+                            this.snake_colors[i][j] = this.snake_background_color;
+                        }
+                    }
+                }
+            }
+
+            update_game_picture = ()=>{
+                this.snake.default_move();
+                this.get_snake_move_and_set_colors();
+                this.screen.set_colors(this.snake_colors);
+            }
+
+            start_game = ()=>{
+                this.screen.update();
+
+                window.addEventListener('keydown', (event) => {
+                    switch(event.code){
+                        case 'ArrowUp':
+                            this.snake.control_move(0);
+                            break;
+                        case 'ArrowDown':
+                            this.snake.control_move(1);
+                            break;
+                        case 'ArrowRight':
+                            this.snake.control_move(2);
+                            break;
+                        case 'ArrowLeft':
+                            this.snake.control_move(3);
+                            break;
+                    }
+                });
+
+                let timer_game = setInterval(() => {
+                    this.update_game_picture();
+                }, 100);
+
+                let timer_screen = setInterval(()=>{
+                    this.screen.update();
+                }, 1);
+            }
+
+
+        }
+
+        const screen = new Screen('canvas', 900, 900, 25, 25, '#000000');
+        const snake = new Snake(screen.screen_RowSize, screen.screen_ColSize);
+        const controller = new Controller(snake, screen, '#FFFFFF', '#000000').start_game();
+
+        //window.addEventListener('keydown', function(event){
+        //    console.log(event.code);
+        //}, false)
+        //const W = "#FFFFFF";
+        //const B = "#000000";
+
+        //function sc(i, j, c="#000000") {
+        //    snake.colors[i][j] = c;
+        //    screen.set_colors(snake.colors);
+        //}
+
+
+    </script>
+</body>
+
+</html>
