@@ -63,7 +63,7 @@ export class GetTris{
 export class Controller{
     constructor(screen){
         this.screen = screen;
-        this.camera = new Camera(screen.ColSize, screen.RowSize, [0,0,0], 60);
+        this.camera = new Camera(screen.ColSize, screen.RowSize, [0,0,0], 80);
         this.coordinate_transform = new CoordinateTransform(screen.ColSize, screen.RowSize);
         this.getTris = new GetTris(this.camera);
     }
