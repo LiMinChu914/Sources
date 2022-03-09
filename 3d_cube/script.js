@@ -36,36 +36,6 @@ function startup() {
         0, 7, 4
     ]);
     const ctl = new Controller(screen);
-    ctl.draw_mesh(mesh, 169, 27, 197);
+    ctl.draw_mesh(mesh, 21, 163, 206);
 
-
-    /*const glCanvas = document.getElementById("canvas");
-    const glScreen = new GLScreen(glCanvas);
-    const fps = document.getElementById("fps");
-    glScreen.setBackground([0.0, 0.0, 0.0, 1.0]);
-
-    glScreen.start(function () {
-        glScreen.beginFrame();
-
-        //engine.rotateZ([-0.5, -0,5, 3], 0.06);
-        //engine.rotateY([-0.5, -0,5, 3], 0.05);
-        engine.rotateX([-0.5, -0,5, 3], 0.03);
-
-        let cube_tris = engine.projection();
-
-        for (let i = 0; i < 1; i++) {
-            for(let j = 0; j < 12; j++){
-                glScreen.drawPolygon([
-                    cube_tris[j].p1[0],cube_tris[j].p1[1],cube_tris[j].p1[2],
-                    cube_tris[j].p2[0],cube_tris[j].p2[1],cube_tris[j].p2[2],
-                    cube_tris[j].p3[0],cube_tris[j].p3[1],cube_tris[j].p3[2]
-                ], [
-                    1.0, 1.0, 0.0, 1.0,
-                    0.0, 1.0, 1.0, 1.0,
-                    1.0, 0.0, 1.0, 1.0,
-                ], 3);
-            }
-        }
-        fps.textContent = glScreen.getFps();
-    });*/
 }
